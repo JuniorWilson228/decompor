@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tempo de Decomposição</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      background-color: #1b5e20;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    #codigoInput {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      width: 80%;
+      max-width: 300px;
+      border: 2px solid #2e7d32;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin: 5px;
+      background-color: #388e3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2e7d32;
+    }
+
+    #video-container {
+      position: relative;
+      margin: 20px auto;
+      max-width: 400px;
+      display: none;
+    }
+
+    #video {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .info img {
+      max-width: 200px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .sugestoes {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .sugestao {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 10px;
+      max-width: 160px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .sugestao img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    #statusMensagem {
+      margin-top: 15px;
+      font-style: italic;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Quanto tempo leva para se decompor?</h1>
+
+  <input type="text" id="codigoInput" placeholder="Digite o código ou nome do produto">
+  <br>
+  <button onclick="buscarProduto()">Buscar</button>
+  <button onclick="iniciarScanner()">📷 Usar Câmera</button>
+  <button onclick="pararCamera()" id="botaoParar" style="display:none;">❌ Desligar Câmera</button>
+
+  <div id="video-container">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
+
+  <div id="statusMensagem"></div>
+  <div class="info" id="infoProduto"></div>
+
+  <script>
+   const produtos = [
+      {
+        codigo: "7891000241231",
+        nome: "Garrafa PET",
+        imagem: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiV7nVAu1AuQ2A5D39P-BTlAlDE1sQbqn5QQ&s",
+        decomposicao: "450 anos",
+        sugestoes: [
+          {
+            nome: "Garrafa de vidro reutilizável",
+            imagem: "https://http2.mlstatic.com/D_NQ_NP_855367-MLB51544741545_092022-O-15-garrafa-vidro-ice-275-ml-frasco-original.webp",
+            preco: "R$ 29,90",
+            link: "https://www.exemplo.com/produto/garrafa-vidro"
+          },
+          {
+            nome: "Copo de alumínio",
+            imagem: "https://lebiscuit.vtexassets.com/arquivos/ids/19538137/17248129669565.jpg?v=638642587955830000",
+            preco: "R$ 15,00",
+            link: "https://www.exemplo.com/produto/copo-aluminio"
+          }
+        ]
+      },
+      {
+        codigo: "7891234567890",
+        nome: "Sacola plástica",
+        imagem: "https://costaatacado.vtexassets.com/arquivos/ids/201426/Sacola-Plastica-30x40---100-Unidades.jpg?v=637967867666000000",
+        decomposicao: "100 anos",
+        sugestoes: [
+          {
+            nome: "Sacola de pano",
+            imagem: "https://cdn.awsli.com.br/2500x2500/1274/1274074/produto/78338070/sacola-de-feira-pequena-confeccionada-em-nylon-01-peca-30x29x15cm-efb12b28.jpg",
+            preco: "R$ 12,90",
+            link: "https://www.exemplo.com/produto/sacola-pano"
+          },
+          {
+            nome: "Sacola biodegradável",
+            imagem: "https://papelariacastelo.com.br/wp-content/uploads/2022/08/sacola-jussara.png",
+            preco: "R$ 9,50",
+            link: "https://www.exemplo.com/produto/sacola-biodegradavel"
+          }
+        ]
+      },
+      {
+        codigo: "7899876543210",
+        nome: "Latinha de alumínio",
+        imagem: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXqbIBZA92Bh1iBYrUhL5NQfS3TI3837rvrw&s",
+        decomposicao: "200 anos",
+        sugestoes: [
+          {
+            nome: "Garrafa de vidro retornável",
+            imagem: "https://vidrado.com/wp-content/uploads/2011/07/Vantagens-das-Embalagens-de-Vidro-e-Plastico.jpg",
+            preco: "R$ 25,00",
+            link: "https://www.exemplo.com/produto/garrafa-retornavel"
+          },
+          {
+            nome: "Caneca",
+            imagem: "https://down-br.img.susercontent.com/file/4fac57199830b1aeacafc7445f105310",
+            preco: "R$ 18,90",
+            link: "https://www.exemplo.com/produto/caneca"
+          }
+        ]
+      },
+      {
+        codigo: "78945456",
+        nome: "tic tac",
+        imagem: "https://www.tictac.com/br/static/d2802bc8f284630a9b2f31a387a5a835/orange_packshot_br.png",
+        decomposicao: "200 anos",
+        sugestoes: [
+          {
+            nome: "exemplo",
+            imagem: "https://vidrado.com/wp-content/uploads/2011/07/Vantagens-das-Embalagens-de-Vidro-e-Plastico.jpg",
+            preco: "R$ 25,00",
+            link: "https://www.exemplo.com/produto/garrafa-retornavel"
+          },
+          {
+            nome: "exemplo2",
+            imagem: "https://down-br.img.susercontent.com/file/4fac57199830b1aeacafc7445f105310",
+            preco: "R$ 18,90",
+            link: "https://www.exemplo.com/produto/caneca"
+          }
+        ]
+      },
+
+
+
+    ];
+
+    let currentStream = null;
+    let scannerAtivo = false;
+    let scannerTimeout;
+
+    function buscarProduto(valor = null) {
+      const entrada = valor || document.getElementById("codigoInput").value.trim().toLowerCase();
+      const infoDiv = document.getElementById("infoProduto");
+      const statusDiv = document.getElementById("statusMensagem");
+
+      if (!entrada) {
+        infoDiv.innerHTML = `<p>❌ Digite um código ou nome de produto.</p>`;
+        return;
+      }
+
+      const produto = produtos.find(p =>
+        p.codigo === entrada || p.nome.toLowerCase().includes(entrada)
+      );
+
+      if (produto) {
+        statusDiv.innerHTML = "";
+        infoDiv.innerHTML = `
+          <img src="${produto.imagem}" alt="${produto.nome}">
+          <h2>${produto.nome}</h2>
+          <p><strong>Tempo de decomposição:</strong> ${produto.decomposicao}</p>
+          <h3>💡 Alternativas sustentáveis:</h3>
+          <div class="sugestoes">
+            ${produto.sugestoes.map(s => `
+              <div class="sugestao">
+                <img src="${s.imagem}" alt="${s.nome}">
+                <p><strong>${s.nome}</strong></p>
+                <p>💰 ${s.preco}</p>
+                <a href="${s.link}" target="_blank">🔗 Comprar</a>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      } else {
+        infoDiv.innerHTML = `<p>❌ Produto não encontrado.</p>`;
+      }
+    }
+
+    function pararCamera() {
+      if (scannerAtivo) {
+        Quagga.stop();
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+        }
+        document.getElementById("video-container").style.display = "none";
+        document.getElementById("botaoParar").style.display = "none";
+        document.getElementById("statusMensagem").textContent = "";
+        scannerAtivo = false;
+        clearTimeout(scannerTimeout);
+      }
+    }
+
+    function iniciarScanner() {
+  const video = document.getElementById("video");
+  const videoContainer = document.getElementById("video-container");
+  const statusDiv = document.getElementById("statusMensagem");
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }
+  }).then(stream => {
+    currentStream = stream;
+    video.srcObject = stream;
+    videoContainer.style.display = "block";
+    document.getElementById("botaoParar").style.display = "inline-block";
+    statusDiv.textContent = "🔍 Escaneando... aponte para o código de barras";
+
+    Quagga.init({
+      inputStream: {
+        type: "LiveStream",
+        target: video,
+        constraints: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "environment"
+        }
+      },
+      decoder: {
+        readers: ["ean_reader"], // Somente EAN (como usado no Brasil)
+      },
+      locate: true, // ajuda a melhorar a detecção
+    }, err => {
+      if (err) {
+        console.error("Erro ao iniciar Quagga:", err);
+        statusDiv.textContent = "Erro ao iniciar o scanner.";
+        return;
+      }
+      Quagga.start();
+      scannerAtivo = true;
+
+      scannerTimeout = setTimeout(() => {
+        if (scannerAtivo) {
+          statusDiv.textContent = "⚠️ Nenhum código detectado. Tente novamente.";
+        }
+      }, 10000); // 10 segundos
+    });
+
+    Quagga.onDetected(result => {
+      const codigo = result.codeResult.code;
+      const valido = /^[0-9]{12,13}$/.test(codigo); // Garante que é EAN válido
+
+      if (valido) {
+        console.log("Código detectado:", codigo);
+        Quagga.offDetected(); // para não detectar várias vezes
+        pararCamera();
+        document.getElementById("codigoInput").value = codigo;
+        statusDiv.textContent = "✅ Código lido: " + codigo;
+        buscarProduto(codigo);
+      } else {
+        console.warn("Código inválido detectado:", codigo);
+        statusDiv.textContent = "⚠️ Código inválido lido, tentando novamente...";
+      }
+    });
+
+  }).catch(err => {
+    console.error("Erro ao acessar câmera:", err);
+    alert("Erro ao acessar a câmera: " + err.message);
+  });
+}
+
+  </script>
+</body>
+</html>
